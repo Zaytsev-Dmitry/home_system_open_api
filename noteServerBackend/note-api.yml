@@ -116,11 +116,9 @@ components:
       type: object
       properties:
         objects:
-          $ref: '#/components/schemas/NoteResponse'
-        name:
-          type: string
-        link:
-          type: string
+          type: array
+          items:
+            $ref: '#/components/schemas/NoteResponse'
     #--------------------------------------------------------------------------------------------------------#
     ErrorResponse:
       type: object
