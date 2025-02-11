@@ -31,6 +31,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+  /account/{telegramId}:
+    post:
+      tags:
+        - Account
+      operationId: getAccountByTgId
+      description: 'Получить пользователя по tg id'
+      parameters:
+        - name: telegramId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 #--------------------------------------------------------------------------------------------------------#
   /profile/{telegramId}:
     get:
@@ -44,6 +70,7 @@ paths:
           required: true
           schema:
             type: integer
+            format: int64
       responses:
         '200':
           description: OK
@@ -86,6 +113,8 @@ components:
         id:
           type: integer
           format: int64
+        keycloakId:
+          type: string
         username:
           type: string
         firstName:
@@ -125,6 +154,6 @@ components:
           format: int64
         role:
           type: string
-        telegramUsername:
+        username:
           type: string
 #--------------------------------------------------------------------------------------------------------#

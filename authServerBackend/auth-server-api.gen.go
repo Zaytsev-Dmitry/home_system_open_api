@@ -29,6 +29,7 @@ type AccountResponse struct {
 	Email            *string `json:"email,omitempty"`
 	FirstName        *string `json:"firstName,omitempty"`
 	Id               *int64  `json:"id,omitempty"`
+	KeycloakId       *string `json:"keycloakId,omitempty"`
 	LastName         *string `json:"lastName,omitempty"`
 	TelegramId       *int64  `json:"telegramId,omitempty"`
 	TelegramUserName *string `json:"telegramUserName,omitempty"`
@@ -60,10 +61,10 @@ type ErrorResponse struct {
 
 // ProfileResponse defines model for ProfileResponse.
 type ProfileResponse struct {
-	AccountId        *int64  `json:"accountId,omitempty"`
-	Id               *int64  `json:"id,omitempty"`
-	Role             *string `json:"role,omitempty"`
-	TelegramUsername *string `json:"telegramUsername,omitempty"`
+	AccountId *int64  `json:"accountId,omitempty"`
+	Id        *int64  `json:"id,omitempty"`
+	Role      *string `json:"role,omitempty"`
+	Username  *string `json:"username,omitempty"`
 }
 
 // RegisterAccountJSONRequestBody defines body for RegisterAccount for application/json ContentType.
@@ -75,8 +76,11 @@ type ServerInterface interface {
 	// (POST /account)
 	RegisterAccount(c *gin.Context)
 
+	// (POST /account/{telegramId})
+	GetAccountByTgId(c *gin.Context, telegramId int64)
+
 	// (GET /profile/{telegramId})
-	GetProfileByTgId(c *gin.Context, telegramId int)
+	GetProfileByTgId(c *gin.Context, telegramId int64)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -101,13 +105,37 @@ func (siw *ServerInterfaceWrapper) RegisterAccount(c *gin.Context) {
 	siw.Handler.RegisterAccount(c)
 }
 
+// GetAccountByTgId operation middleware
+func (siw *ServerInterfaceWrapper) GetAccountByTgId(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "telegramId" -------------
+	var telegramId int64
+
+	err = runtime.BindStyledParameterWithOptions("simple", "telegramId", c.Param("telegramId"), &telegramId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter telegramId: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetAccountByTgId(c, telegramId)
+}
+
 // GetProfileByTgId operation middleware
 func (siw *ServerInterfaceWrapper) GetProfileByTgId(c *gin.Context) {
 
 	var err error
 
 	// ------------- Path parameter "telegramId" -------------
-	var telegramId int
+	var telegramId int64
 
 	err = runtime.BindStyledParameterWithOptions("simple", "telegramId", c.Param("telegramId"), &telegramId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
@@ -153,24 +181,25 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	}
 
 	router.POST(options.BaseURL+"/account", wrapper.RegisterAccount)
+	router.POST(options.BaseURL+"/account/:telegramId", wrapper.GetAccountByTgId)
 	router.GET(options.BaseURL+"/profile/:telegramId", wrapper.GetProfileByTgId)
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9RUz0ocTxB+laV+v+Ows+YfMjcVkSWQiFFyCHtoZ2tnW2a6J9U1giwLRgO5CDnmmFdY",
-	"EiRGib5CzxuF7pnVVUfZBAPJremqrqr+6vu+EcQ6y7VCxQaiEZh4iJnwx6U41oXiDTS5VgbdVU46R2KJ",
-	"PgEzIVN34L0cIQLDJFUC4wAGkgy/EBk2RmXfXQ80ZYIhAqn42RMIpnlSMSZILjEV91RhTDEhkXXnrTZ9",
-	"sGWQ7qxaGCTVHBxfFtXbOxizS18hFIyXSL0t0PBtoEQV3/SvR4CqyCB6A5trEMDr1WXoBbcH+V1w/37M",
-	"Vok03c2q7cJIhcas6P5sxZmh0BVonCQXPGwMGBZcmOZyLDM0LLJ8zvnXSQ9kinf/oF733CDPrQfS6f17",
-	"3fqVTbgrqQbaJ0t2pWGp4GHLIO0itZbWuxDALpKRWkEEC+1Ou+O66RyVyCVE8LjdaS9Ahbv/elj/3YOi",
-	"Ky300cQkc66q2E92Uu7bY/vVnpTvyoNy356U+/bcfrGT8qA8atmJPbWndlIe2h/lAfh2JNxrByhsYCIN",
-	"I9WagwCokt2y7u+5drFWjNUEIs9TGfu34Y5x7acG507/Ew4ggv/CKwcMa/sLG3U99pBRvXf/30edzoP1",
-	"vOm3vtt18F4+d/g/fcCm18XY0LKr2HEqbb2qWOEfVHQSiXE2Nt1Ez12GeaWOcHTlNWM3RIJNZPhsz+1Z",
-	"eVh+sCfV8i8cF8r3dmK/27OWvfDxI/ttShB7bM/Kjz7Q4qQl+7cIsoZcK3R5bzPp9j09SWTISG7eEUjX",
-	"2ltFAJVaZo2xIpQk7EPEVGAwg+RNSY57f5APN33mX+FDPbfjg3Nen1YBf71SqmORQgAFpRDBkDmPwtBf",
-	"DrXhaLGzuADj3vhnAAAA//9yZYraoggAAA==",
+	"H4sIAAAAAAAC/+xVzUocQRB+laWS47Cz5g+Zm4rIEkjEGHIIe2hnamdbZ7on3TXCsgwYDeQi5JhjXmFJ",
+	"kBgl5hV63ih0z6yu7qiLeEhCbkN1dX3VX331zQhCmWZSoCANwQh0OMCUuc+lMJS5oA3UmRQabShTMkNF",
+	"HF0Cpown9oOGGUIAmhQXMRQe9LnS9IKl2HjKIxvuS5UyggC4oGdPwJvkcUEYo7KJOzgME8l2ulFjnYTd",
+	"AEKYYKxY2p0XbHLhtUZ1bdVcoxLNh8V5Ubm1jSHZ9BWFjPCcyHc5aprlkVXnm+72CFDkKQRvYXMNPHiz",
+	"ugw9b7aRu3L/53O2qpRU14tuK9dcoNYrMpquONUU2gKNnWSMBo0Hmhjlurkc8RQ1sTSbs/91Jfs8wetf",
+	"UI97bpLnXhclk3uYgA1x0ZcumZMtCUs5DVoa1S6q1tJ6FzzYRaW5FBDAQrvT7lgUmaFgGYcAHrc77QWo",
+	"+HZP9us3OzJktQMR6lDxjKoq5rMZl3vmyHwzx+X7cr/cM8flnjkzX8243C8PW2ZsTsyJGZcH5me5Dw5O",
+	"MXvbEgkbGHNNqOpdAw9UtW7LMhpauFAKwqoDlmUJD91df1tb+Inv2a+HCvsQwAP/whj92hX9xn0uHGWq",
+	"nrd776NO594wr9qwQ7tM3svnlv+n9wh6eQkbILuCrKaS1qtKFe5CJScWa2tfk0n0bHAiAH904THFDWr4",
+	"Ys7MaXlQfjTH1fR/ucCh+T6RhDkyp+Und9CiuMWjGUmsIdU9LA83427kBKlYioTKdjgCbrGcKXhQ7ce0",
+	"BVYS4gojCEjl6E1xd+s2Fr3/krhFEllllDOSiHE+RVh7KD+YsflhTu8qkNqs/zWBXP0H/S0Cqfu2ArF/",
+	"ZZdWTeJypUSGLAEPcpVAAAOiLPB9FxxITcFiZ3EBil7xOwAA///8pCi13QoAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
