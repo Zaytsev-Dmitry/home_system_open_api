@@ -43,20 +43,24 @@ components:
           type: string
         email:
           type: string
-        login:
-          type: string
-        password:
+        username:
           type: string
         accountType:
           type: string
           enum: [ "TG", "WEB" ]
         telegramId:
           type: integer
+          format: int64
+        telegramUserName:
+          type: string
     #--------------------------------------------------------------------------------------------------------#
     AccountResponse:
       type: object
       properties:
-        login:
+        id:
+          type: integer
+          format: int64
+        username:
           type: string
         firstName:
           type: string
@@ -64,6 +68,11 @@ components:
           type: string
         email:
           type: string
+        telegramUserName:
+          type: string
+        telegramId:
+          type: integer
+          format: int64
     #--------------------------------------------------------------------------------------------------------#
     ErrorResponse:
       type: object
