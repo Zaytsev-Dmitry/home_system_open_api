@@ -8,12 +8,14 @@ import (
 	"compress/gzip"
 	"encoding/base64"
 	"fmt"
+	"net/http"
 	"net/url"
 	"path"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gin-gonic/gin"
+	"github.com/oapi-codegen/runtime"
 )
 
 // Defines values for CreateAccountRequestAccountType.
@@ -24,21 +26,24 @@ const (
 
 // AccountResponse defines model for AccountResponse.
 type AccountResponse struct {
-	Email     *string `json:"email,omitempty"`
-	FirstName *string `json:"firstName,omitempty"`
-	LastName  *string `json:"lastName,omitempty"`
-	Login     *string `json:"login,omitempty"`
+	Email      *string `json:"email,omitempty"`
+	FirstName  *string `json:"firstName,omitempty"`
+	Id         *int64  `json:"id,omitempty"`
+	IsActive   *bool   `json:"isActive,omitempty"`
+	LastName   *string `json:"lastName,omitempty"`
+	TelegramId *int    `json:"telegramId,omitempty"`
+	Type       *string `json:"type,omitempty"`
 }
 
 // CreateAccountRequest defines model for CreateAccountRequest.
 type CreateAccountRequest struct {
-	AccountType *CreateAccountRequestAccountType `json:"accountType,omitempty"`
-	Email       *string                          `json:"email,omitempty"`
-	FirstName   *string                          `json:"firstName,omitempty"`
-	LastName    *string                          `json:"lastName,omitempty"`
-	Login       *string                          `json:"login,omitempty"`
-	Password    *string                          `json:"password,omitempty"`
-	TelegramId  *int                             `json:"telegramId,omitempty"`
+	AccountType      *CreateAccountRequestAccountType `json:"accountType,omitempty"`
+	Email            *string                          `json:"email,omitempty"`
+	FirstName        *string                          `json:"firstName,omitempty"`
+	LastName         *string                          `json:"lastName,omitempty"`
+	Password         *string                          `json:"password,omitempty"`
+	TelegramId       *int                             `json:"telegramId,omitempty"`
+	TelegramUsername *string                          `json:"telegramUsername,omitempty"`
 }
 
 // CreateAccountRequestAccountType defines model for CreateAccountRequest.AccountType.
@@ -53,6 +58,14 @@ type ErrorResponse struct {
 	Timestamp    *string `json:"timestamp,omitempty"`
 }
 
+// ProfileResponse defines model for ProfileResponse.
+type ProfileResponse struct {
+	AccountId        *int64  `json:"accountId,omitempty"`
+	Id               *int64  `json:"id,omitempty"`
+	Role             *string `json:"role,omitempty"`
+	TelegramUsername *string `json:"telegramUsername,omitempty"`
+}
+
 // RegisterAccountJSONRequestBody defines body for RegisterAccount for application/json ContentType.
 type RegisterAccountJSONRequestBody = CreateAccountRequest
 
@@ -61,6 +74,9 @@ type ServerInterface interface {
 
 	// (POST /account)
 	RegisterAccount(c *gin.Context)
+
+	// (GET /profile/{telegramId})
+	GetProfileByTgId(c *gin.Context, telegramId int)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -83,6 +99,30 @@ func (siw *ServerInterfaceWrapper) RegisterAccount(c *gin.Context) {
 	}
 
 	siw.Handler.RegisterAccount(c)
+}
+
+// GetProfileByTgId operation middleware
+func (siw *ServerInterfaceWrapper) GetProfileByTgId(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "telegramId" -------------
+	var telegramId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "telegramId", c.Param("telegramId"), &telegramId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter telegramId: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetProfileByTgId(c, telegramId)
 }
 
 // GinServerOptions provides options for the Gin server.
@@ -113,20 +153,24 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	}
 
 	router.POST(options.BaseURL+"/account", wrapper.RegisterAccount)
+	router.GET(options.BaseURL+"/profile/:telegramId", wrapper.GetProfileByTgId)
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/7xUwWoUQRD9laX0OOzMKkKY2yYEWQSVGPAge+jM1s52mOluq2oiYVlY16t3f2NRhBDQ",
-	"b+j5I+mejTHJRDwEb029qnpvql7NEgpbO2vQCEO+BC4WWKv4HBeFbYwcITtrGEPIkXVIojEmYK10FR5y",
-	"7hByYCFtSlglMNfE8lLV2ItW6m+gLbXpQVbJVcSenGIhIfeAUAn+1vm+QZa7MlWHH8fqJaBpasjfwfFz",
-	"SODt4T5Mk7sq/uunJeAU8wdLs15QsMKSVD35E9ZGsETqn8shkaX793bSsDbIfGBn2NcyAQwN7lEqi16A",
-	"RUnD/e1E18iiavdPew0hbeY2JmupAjZuZDFgpDOkwfj1BBI4Q2JtDeQwGmbDLNBYh0Y5DTk8HWbDEXRq",
-	"o6Z0Z4I4DNu5ZIZckHbSdfFf/LZd++/+m79oP7abdu0v2rX/6b/6bbtpPw/81l/6S79tP/kf7QYiHalQ",
-	"HRYDR1hqFqSdGyEB6gy5b2fnga6wRrBToJyrdBFr01O25vrwwusx4RxyeJReX2a6O8u01/GrODLa7Tt+",
-	"75MsezDO2/+ByHZzeK9ehPk/e0DSmxbuoZwYQTKqGrzpXBELOjupksOBX21iGqs78wTg9uYrW6gKEmio",
-	"ghwWIi5P0xhcWJZ8L9sbwWq6+hUAAP//F+bCjSoFAAA=",
+	"H4sIAAAAAAAC/9RUz0ocTxB+laV+v+Ows+YfMrdVRJZAIsaQQ9hDO1M72zLTPemuMciyYDSQi5BjjnmF",
+	"JUFilOgr9LxR6O5ZXd1ZMWIOuTVV1fVVffVVjSCWeSEFCtIQjUDHQ8yZe3bjWJaCNlEXUmi0pkLJAhVx",
+	"dAGYM57ZB+0VCBFoUlykMA5gwJWmFyzHRi9PrHkgVc4IIuCCnj2BYBrHBWGKygXqbkx8dzbLtpQZMmG9",
+	"GbsFgzDDVLG8l8y4Z1J7y9zHSw/I7R2MyYauKmSEl2y8K1HTPBnM+7fqvCjKHKK3sLUOAbxZW4F+MF/k",
+	"fQm8tfOCaf1equR+tNT+1xqVaEZoomhNKakWC2W71Fyg1qsywWZctAkWtEPDRocmRqVe0AbPURPLizvW",
+	"v6HkgGe4uIN6ur07K/eugUpmtwv4jyZhTVwMpAvmZFNDt6RhS6PaRdXqbvQggF1UmksBESy1O+2ORZMF",
+	"ClZwiOBxu9NeAs+7az2se3ekSC/9BHWseEE+i/liJtW+OTbfzUn1oTqo9s1JtW/OzTczqQ6qo5aZmFNz",
+	"aibVoflVHYCDU8z+toTCJqZcE6p6xSAA5bdsRSZ7Fi6WgtBXwIoi47H7G+5oCz+9Wfb1v8IBRPBfeHXU",
+	"wvqihY1rPHaUqXrurt9Hnc6DYd48oQ7tOnkvn1v+nz4g6PVlbIDsCbKaylqvvCrcBy8nlmp7taaT6Ftj",
+	"WPjtCEdX12Nsi0ixSQxfzbk5qw6rT+bED//CaqH6aCbmpzlrmQvnPzI/pgIxx+as+uwcLUpbPJkTyDpS",
+	"vaEre1tpL3HyVCxHQmXrHQG30O5UBOC3ZfbUeUFxhQlEpEoMZpi8uZLj/l/Uw80786/ooa7b6sFeXhfm",
+	"ib+eKZMxyyCAUmUQwZCoiMLQGYdSU7TcWV6CcX/8OwAA///vwX1ldQgAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
