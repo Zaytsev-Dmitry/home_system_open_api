@@ -20,10 +20,10 @@ import (
 
 // CreateNoteRequest defines model for CreateNoteRequest.
 type CreateNoteRequest struct {
-	AccountId   *int    `json:"accountId,omitempty"`
 	Description *string `json:"description,omitempty"`
 	Link        *string `json:"link,omitempty"`
 	Name        *string `json:"name,omitempty"`
+	TgId        *int64  `json:"tgId,omitempty"`
 }
 
 // ErrorResponse defines model for ErrorResponse.
@@ -42,6 +42,7 @@ type NoteResponse struct {
 	Id          *string `json:"id,omitempty"`
 	Link        *string `json:"link,omitempty"`
 	Name        *string `json:"name,omitempty"`
+	TgId        *int64  `json:"tgId,omitempty"`
 }
 
 // NoteResponseList defines model for NoteResponseList.
@@ -58,11 +59,11 @@ type ServerInterface interface {
 	// (POST /note)
 	SaveNote(c *gin.Context)
 
-	// (DELETE /note/{accountId})
-	DeleteNotesByAccountId(c *gin.Context, accountId int)
+	// (DELETE /note/{tgId})
+	DeleteNotesByTgId(c *gin.Context, tgId int)
 
-	// (GET /note/{accountId})
-	GetNotesByAccountId(c *gin.Context, accountId int)
+	// (GET /note/{tgId})
+	GetNotesByTgId(c *gin.Context, tgId int64)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -87,17 +88,17 @@ func (siw *ServerInterfaceWrapper) SaveNote(c *gin.Context) {
 	siw.Handler.SaveNote(c)
 }
 
-// DeleteNotesByAccountId operation middleware
-func (siw *ServerInterfaceWrapper) DeleteNotesByAccountId(c *gin.Context) {
+// DeleteNotesByTgId operation middleware
+func (siw *ServerInterfaceWrapper) DeleteNotesByTgId(c *gin.Context) {
 
 	var err error
 
-	// ------------- Path parameter "accountId" -------------
-	var accountId int
+	// ------------- Path parameter "tgId" -------------
+	var tgId int
 
-	err = runtime.BindStyledParameterWithOptions("simple", "accountId", c.Param("accountId"), &accountId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "tgId", c.Param("tgId"), &tgId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter accountId: %w", err), http.StatusBadRequest)
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter tgId: %w", err), http.StatusBadRequest)
 		return
 	}
 
@@ -108,20 +109,20 @@ func (siw *ServerInterfaceWrapper) DeleteNotesByAccountId(c *gin.Context) {
 		}
 	}
 
-	siw.Handler.DeleteNotesByAccountId(c, accountId)
+	siw.Handler.DeleteNotesByTgId(c, tgId)
 }
 
-// GetNotesByAccountId operation middleware
-func (siw *ServerInterfaceWrapper) GetNotesByAccountId(c *gin.Context) {
+// GetNotesByTgId operation middleware
+func (siw *ServerInterfaceWrapper) GetNotesByTgId(c *gin.Context) {
 
 	var err error
 
-	// ------------- Path parameter "accountId" -------------
-	var accountId int
+	// ------------- Path parameter "tgId" -------------
+	var tgId int64
 
-	err = runtime.BindStyledParameterWithOptions("simple", "accountId", c.Param("accountId"), &accountId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
+	err = runtime.BindStyledParameterWithOptions("simple", "tgId", c.Param("tgId"), &tgId, runtime.BindStyledParameterOptions{Explode: false, Required: true})
 	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter accountId: %w", err), http.StatusBadRequest)
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter tgId: %w", err), http.StatusBadRequest)
 		return
 	}
 
@@ -132,7 +133,7 @@ func (siw *ServerInterfaceWrapper) GetNotesByAccountId(c *gin.Context) {
 		}
 	}
 
-	siw.Handler.GetNotesByAccountId(c, accountId)
+	siw.Handler.GetNotesByTgId(c, tgId)
 }
 
 // GinServerOptions provides options for the Gin server.
@@ -163,24 +164,24 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	}
 
 	router.POST(options.BaseURL+"/note", wrapper.SaveNote)
-	router.DELETE(options.BaseURL+"/note/:accountId", wrapper.DeleteNotesByAccountId)
-	router.GET(options.BaseURL+"/note/:accountId", wrapper.GetNotesByAccountId)
+	router.DELETE(options.BaseURL+"/note/:tgId", wrapper.DeleteNotesByTgId)
+	router.GET(options.BaseURL+"/note/:tgId", wrapper.GetNotesByTgId)
 }
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8xV3WoUTRB9laG+73LZmWiEMHdJFAlKlORSctGZqex2nOluq2sDyzLgD94Jgm8gvkAu",
-	"hATF5BV63ki6O2v2Z4Kiieaut6q26vQ5dXomUOjaaIWKLeQTsMUQaxGOm4SCcVsz7uCLEVr2QUPaILHE",
-	"UCKKQo8Ub5X+B48NQg5SMQ6QoOlBibYgaVhqNVNgmaQa+Hwl1fPOhBI1diSa3jSi9w+xYF/6gEjTDlqj",
-	"lcVlhPsjKxVau6lL7AaJvkEnCiN42JmwLHhku9uxrNGyqM0v4o/8XgX/DwmW5Y3xPov7sexajlgbjpKx",
-	"Dof/CQ8gh//Sy61LL1YunWPicqQgEuMuDD4k1YEOgCVXPud7JMKYShbCs5KsP92CHhwh2cARrPSzfua7",
-	"a4NKGAk53O1n/RWIcgeQqdIctdDxXnM0g/voztq37Ut37L650/Z1+y5xJ+7YnbvT9pX70r6B0J0CAK8c",
-	"7Iqj4CPoAUUrbehy7DsXWjGqMGQGdXpoo6CRmp8Rt2zUJpBDF2SGS93JsmsbOK9Us7iI8OSRZ/jeNU6c",
-	"d3nHyC3FSEpUyS7SEVIS/hC3Rgws5M/CasCejwR908kPbzVR4wqj6gtqf3Kf3bH72ql04s7dWXJp0kXh",
-	"74emfrLdGK/PlBlBokZG8tAmIP2k8NxMPQizTf3SSMIScqYR9mY4W3wSmr0l2VeX77Stk6kqt1anHgyw",
-	"y3wf3En7/jekeIj8b3W4GfuFp/dKC65G9f+OtBuiTGj6AN1a+/vPd6iJis+3qXQhKujBiCrIYchs8jQN",
-	"waG2nK9laxk0e833AAAA//+n4jD7NQkAAA==",
+	"H4sIAAAAAAAC/8xVzWoUQRB+laH0OOxsNEqYm4kiQYmSeJMcOjOV3Y4z3WN1bWBZBvzBmyD4BuIL5CAk",
+	"KCav0PNG0t3ZZDfbISKJ5Dbb1V0/30/tBApdN1qhYgP5BEwxxFr4zzVCwbihGTfx7QgNu8OGdIPEEv2V",
+	"Ek1BsmGplfvJ4wYhB8Mk1QDaFCqp3kQDStQYDfBgvXSBXU21YMhBKn64DOn0plSMAyRo27MjvbOHBbvH",
+	"T4g0baJptDK42O3OyEiFxqzpcrb4WcoU0CWI9tUIHkYDhgWPTDwdyxoNi7qJvIz1H7C+rH1RFHqkOOCz",
+	"WOwqLmR5GyiaHfG5jGkq3PWfkrH2H3cJdyGHO9m5WLNTpWZzoJ2XFERiHOvBHUm1q/1skisXczkS0TSV",
+	"LIQDMHn0ch1S2EcyHk5Y6vV7fZddN6hEIyGH+71+bwmCMnyTmdIcaNNhrjlGwH6zx92n7p09sL/tUfeh",
+	"+5zYQ3tgT+xR997+7D6Cz06+AYcwbIl9bz9IgYIDV3U5dpkLrRiVLzLTdbZnAvcBmquAW/R368GhUzD9",
+	"UPf6/WsrOM9Ue1Gz8OKZQ/jBNVacXwiRkuuKkZSoki2kfaTEPwiqEQMD+WsvDdh2J57fbOLk3wZ6KwyE",
+	"XyD6u/1hD+yvKMmJPbHHCWOFAxJ1IssF1h/7tK6sWR2/cl5zGiNRIyO5liYgXRm/kaY2DaYMOpGEJeRM",
+	"I0xnYJp3a9Su2wvcLy9Ot6GTKTW3lqwUBhhz4Fd72H35J1KeIt8wI39HyM2Y0S/iSw25HGTwfzheFWVC",
+	"03V0a5eB+9/3dwL782kqXYgKUhhRBTkMmZs8y/zhUBvOV/orfWi32z8BAAD//+tw0/B6CQAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

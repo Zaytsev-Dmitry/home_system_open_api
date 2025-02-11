@@ -32,18 +32,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   #--------------------------------------------------------------------------------------------------------#
-  /note/{accountId}:
+  /note/{tgId}:
     get:
       tags:
         - Note
-      operationId: getNotesByAccountId
-      description: 'Взять записку по accountId'
+      operationId: getNotesByTgId
+      description: 'Взять записку по telegram id'
       parameters:
-        - name: accountId
+        - name: tgId
           in: path
           required: true
           schema:
             type: integer
+            format: int64
       responses:
         '200':
           description: OK
@@ -66,14 +67,15 @@ paths:
     delete:
       tags:
         - Note
-      operationId: deleteNotesByAccountId
-      description: 'Удалить записку по accountId'
+      operationId: deleteNotesByTgId
+      description: 'Удалить записку по telegram id'
       parameters:
-        - name: accountId
+        - name: tgId
           in: path
           required: true
           schema:
             type: integer
+            format: int644
       responses:
         '204':
           description: No content
@@ -89,8 +91,9 @@ components:
     CreateNoteRequest:
       type: object
       properties:
-        accountId:
+        tgId:
           type: integer
+          format: int64
         name:
           type: string
         description:
@@ -111,6 +114,9 @@ components:
           type: string
         accountId:
           type: integer
+        tgId:
+          type: integer
+          format: int64
     #--------------------------------------------------------------------------------------------------------#
     NoteResponseList:
       type: object
