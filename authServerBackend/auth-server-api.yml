@@ -32,7 +32,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
   /account/{telegramId}:
-    post:
+    get:
       tags:
         - Account
       operationId: getAccountByTgId
@@ -42,8 +42,7 @@ paths:
           in: path
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
       responses:
         '200':
           description: OK
