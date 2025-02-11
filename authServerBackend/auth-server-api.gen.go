@@ -26,13 +26,13 @@ const (
 
 // AccountResponse defines model for AccountResponse.
 type AccountResponse struct {
-	Email      *string `json:"email,omitempty"`
-	FirstName  *string `json:"firstName,omitempty"`
-	Id         *int64  `json:"id,omitempty"`
-	IsActive   *bool   `json:"isActive,omitempty"`
-	LastName   *string `json:"lastName,omitempty"`
-	TelegramId *int    `json:"telegramId,omitempty"`
-	Type       *string `json:"type,omitempty"`
+	Email            *string `json:"email,omitempty"`
+	FirstName        *string `json:"firstName,omitempty"`
+	Id               *int64  `json:"id,omitempty"`
+	LastName         *string `json:"lastName,omitempty"`
+	TelegramId       *int64  `json:"telegramId,omitempty"`
+	TelegramUserName *string `json:"telegramUserName,omitempty"`
+	Username         *string `json:"username,omitempty"`
 }
 
 // CreateAccountRequest defines model for CreateAccountRequest.
@@ -41,9 +41,9 @@ type CreateAccountRequest struct {
 	Email            *string                          `json:"email,omitempty"`
 	FirstName        *string                          `json:"firstName,omitempty"`
 	LastName         *string                          `json:"lastName,omitempty"`
-	Password         *string                          `json:"password,omitempty"`
-	TelegramId       *int                             `json:"telegramId,omitempty"`
-	TelegramUsername *string                          `json:"telegramUsername,omitempty"`
+	TelegramId       *int64                           `json:"telegramId,omitempty"`
+	TelegramUserName *string                          `json:"telegramUserName,omitempty"`
+	Username         *string                          `json:"username,omitempty"`
 }
 
 // CreateAccountRequestAccountType defines model for CreateAccountRequest.AccountType.
@@ -159,18 +159,18 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/9RUz0ocTxB+laV+v+Ows+YfMrdVRJZAIsaQQ9hDO1M72zLTPemuMciyYDSQi5BjjnmF",
-	"JUFilOgr9LxR6O5ZXd1ZMWIOuTVV1fVVffVVjSCWeSEFCtIQjUDHQ8yZe3bjWJaCNlEXUmi0pkLJAhVx",
-	"dAGYM57ZB+0VCBFoUlykMA5gwJWmFyzHRi9PrHkgVc4IIuCCnj2BYBrHBWGKygXqbkx8dzbLtpQZMmG9",
-	"GbsFgzDDVLG8l8y4Z1J7y9zHSw/I7R2MyYauKmSEl2y8K1HTPBnM+7fqvCjKHKK3sLUOAbxZW4F+MF/k",
-	"fQm8tfOCaf1equR+tNT+1xqVaEZoomhNKakWC2W71Fyg1qsywWZctAkWtEPDRocmRqVe0AbPURPLizvW",
-	"v6HkgGe4uIN6ur07K/eugUpmtwv4jyZhTVwMpAvmZFNDt6RhS6PaRdXqbvQggF1UmksBESy1O+2ORZMF",
-	"ClZwiOBxu9NeAs+7az2se3ekSC/9BHWseEE+i/liJtW+OTbfzUn1oTqo9s1JtW/OzTczqQ6qo5aZmFNz",
-	"aibVoflVHYCDU8z+toTCJqZcE6p6xSAA5bdsRSZ7Fi6WgtBXwIoi47H7G+5oCz+9Wfb1v8IBRPBfeHXU",
-	"wvqihY1rPHaUqXrurt9Hnc6DYd48oQ7tOnkvn1v+nz4g6PVlbIDsCbKaylqvvCrcBy8nlmp7taaT6Ftj",
-	"WPjtCEdX12Nsi0ixSQxfzbk5qw6rT+bED//CaqH6aCbmpzlrmQvnPzI/pgIxx+as+uwcLUpbPJkTyDpS",
-	"vaEre1tpL3HyVCxHQmXrHQG30O5UBOC3ZfbUeUFxhQlEpEoMZpi8uZLj/l/Uw80786/ooa7b6sFeXhfm",
-	"ib+eKZMxyyCAUmUQwZCoiMLQGYdSU7TcWV6CcX/8OwAA///vwX1ldQgAAA==",
+	"H4sIAAAAAAAC/9RUz0ocTxB+laV+v+Ows+YfMjcVkSWQiFFyCHtoZ2tnW2a6J9U1giwLRgO5CDnmmFdY",
+	"EiRGib5CzxuF7pnVVUfZBAPJremqrqr+6vu+EcQ6y7VCxQaiEZh4iJnwx6U41oXiDTS5VgbdVU46R2KJ",
+	"PgEzIVN34L0cIQLDJFUC4wAGkgy/EBk2RmXfXQ80ZYIhAqn42RMIpnlSMSZILjEV91RhTDEhkXXnrTZ9",
+	"sGWQ7qxaGCTVHBxfFtXbOxizS18hFIyXSL0t0PBtoEQV3/SvR4CqyCB6A5trEMDr1WXoBbcH+V1w/37M",
+	"Vok03c2q7cJIhcas6P5sxZmh0BVonCQXPGwMGBZcmOZyLDM0LLJ8zvnXSQ9kinf/oF733CDPrQfS6f17",
+	"3fqVTbgrqQbaJ0t2pWGp4GHLIO0itZbWuxDALpKRWkEEC+1Ou+O66RyVyCVE8LjdaS9Ahbv/elj/3YOi",
+	"Ky300cQkc66q2E92Uu7bY/vVnpTvyoNy356U+/bcfrGT8qA8atmJPbWndlIe2h/lAfh2JNxrByhsYCIN",
+	"I9WagwCokt2y7u+5drFWjNUEIs9TGfu34Y5x7acG507/Ew4ggv/CKwcMa/sLG3U99pBRvXf/30edzoP1",
+	"vOm3vtt18F4+d/g/fcCm18XY0LKr2HEqbb2qWOEfVHQSiXE2Nt1Ez12GeaWOcHTlNWM3RIJNZPhsz+1Z",
+	"eVh+sCfV8i8cF8r3dmK/27OWvfDxI/ttShB7bM/Kjz7Q4qQl+7cIsoZcK3R5bzPp9j09SWTISG7eEUjX",
+	"2ltFAJVaZo2xIpQk7EPEVGAwg+RNSY57f5APN33mX+FDPbfjg3Nen1YBf71SqmORQgAFpRDBkDmPwtBf",
+	"DrXhaLGzuADj3vhnAAAA//9yZYraoggAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
